@@ -1,0 +1,51 @@
+﻿@model First.Models.StarterModel
+
+<div class="jumbotron">
+    
+    <!--TODO: Если будет время, добавить добавление и снятие потоков расчёта по кнопке-->
+
+    @if (!Model.IsCalcStarted)
+    {
+        using (Html.BeginForm("Start", "Home", FormMethod.Post, new {@class = "form-horizontal", role = "form"}))
+        {
+            <h1>Starter</h1>
+            <p class="lead">Введите число расчетов для запуска:</p>
+
+            <div class="form-group">
+                @Html.TextBoxFor(m => m.ThreadsCount, new {@class = "form-control"})
+                @Html.ValidationMessageFor(m => m.ThreadsCount, "", new {@class = "text-danger"})
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Start calculations" class="btn btn-default"/>
+            </div>
+        }
+    }
+    else
+    {
+        using (Html.BeginForm("Stop", "Home", FormMethod.Get, new {@class = "form-horizontal", role = "form"}))
+        {
+            <h1>Сontinuer</h1>
+            <p class="lead">Для остановки расчетов нажмите стоп</p>
+
+            <div class="form-group">
+                <input type="submit" value="Stop calculations" class="btn btn-default"/>
+            </div>
+        }   
+    }
+</div>
+
+<!--TODO: Добавить отображение вычисления, хотя бы после остановки-->
+<div class="row">
+    <div class="col-md-4">
+
+    </div>
+
+    <div class="col-md-4">
+
+    </div>
+
+    <div class="col-md-4">
+
+    </div>
+</div>

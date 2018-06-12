@@ -1,0 +1,32 @@
+﻿@model Сontinuer.Models.СontinuerModel
+
+<div class="jumbotron">
+    @if (Model.IsCalcStarted)
+    {
+        <h1>Сontinuer</h1>
+        <p class="lead">Запущены процессы расчёта</p>
+    }
+    else
+    {
+        <h1>Сontinuer</h1>
+        <p class="lead">Расчёт не запущен. Запуск осуществляется через Starter.</p>
+    }
+</div>
+
+<!--TODO: Добавить отображение вычисления, хотя бы после остановки-->
+<div class="row">
+    @if (!Model.IsCalcStarted)
+    {
+        <div class="col-md-4">
+
+        </div>
+
+        <div class="col-md-4">
+
+        </div>
+
+        <div class="col-md-4">
+
+        </div>
+    }
+</div>
