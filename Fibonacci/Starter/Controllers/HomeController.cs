@@ -1,10 +1,23 @@
 ﻿using System.Web.Mvc;
+using BLL.Interfaces;
+using BLL.Services;
 using First.Models;
 
 namespace Starter.Controllers
 {
     public class HomeController : Controller
     {
+        //TODO Прикрутить DI, если будет время
+        private readonly IThreadingService _threadingService;
+
+        public HomeController()
+        {
+            ICalculationService calculationService = new CalculationService();
+            ITransportService transportService = new TransportSevice();
+
+            _threadingService = new ThreadingService(calculationService, transportService);
+        }
+
         public ActionResult Index()
         {
             var model = new StarterModel {IsCalcStarted = false};
@@ -18,9 +31,23 @@ namespace Starter.Controllers
         public ActionResult Start(StarterModel model)
         {
             //Запуск потоков расчёта
-            //TODO: запуск параллельных потоков отправляющих числа на API второго приложения
+            _threadingService.StartThreads(model.ThreadsCount);
 
             model.IsCalcStarted = true;
+            return View("Index", model);
+        }
+
+        /// <summary>
+        /// Запустить расчёт
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult CheckCurrentResults()
+        {
+            //Получение результатов из потоков расчёта
+            var values = _threadingService.GetCurrentValues();
+
+            //TODO Доделать вывод
+            var model = new StarterModel {IsCalcStarted = true};
             return View("Index", model);
         }
 
@@ -31,7 +58,7 @@ namespace Starter.Controllers
         public ActionResult Stop(StarterModel model)
         {
             //Остановка потоков расчёта
-            //TODO: остановка всех параллельных потоков вычисления
+            _threadingService.StopThreads();
 
             //TODO: сформировать итог вычисления всех потоков и передать через модель
 

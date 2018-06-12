@@ -1,37 +1,46 @@
 ﻿@model First.Models.StarterModel
 
 <div class="jumbotron">
-    
+
     <!--TODO: Если будет время, добавить добавление и снятие потоков расчёта по кнопке-->
 
     @if (!Model.IsCalcStarted)
     {
-        using (Html.BeginForm("Start", "Home", FormMethod.Post, new {@class = "form-horizontal", role = "form"}))
+        using (Html.BeginForm("Start", "Home", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
         {
             <h1>Starter</h1>
             <p class="lead">Введите число расчетов для запуска:</p>
 
             <div class="form-group">
-                @Html.TextBoxFor(m => m.ThreadsCount, new {@class = "form-control"})
-                @Html.ValidationMessageFor(m => m.ThreadsCount, "", new {@class = "text-danger"})
+                @Html.TextBoxFor(m => m.ThreadsCount, new { @class = "form-control" })
+                @Html.ValidationMessageFor(m => m.ThreadsCount, "", new { @class = "text-danger" })
             </div>
 
             <div class="form-group">
-                <input type="submit" value="Start calculations" class="btn btn-default"/>
+                <input type="submit" value="Start calculations" class="btn btn-default" />
             </div>
         }
     }
     else
     {
-        using (Html.BeginForm("Stop", "Home", FormMethod.Get, new {@class = "form-horizontal", role = "form"}))
+        using (Html.BeginForm("Stop", "Home", FormMethod.Get, new { @class = "form-horizontal", role = "form" }))
         {
             <h1>Сontinuer</h1>
             <p class="lead">Для остановки расчетов нажмите стоп</p>
 
             <div class="form-group">
-                <input type="submit" value="Stop calculations" class="btn btn-default"/>
+                <input type="submit" value="Stop calculations" class="btn btn-default" />
             </div>
-        }   
+        }
+
+        <div>
+            @using (Html.BeginForm("CheckCurrentResults", "Home", FormMethod.Get, new { @class = "form-horizontal", role = "form" }))
+            {
+                <div class="form-group">
+                    <input type="submit" value="Check values" class="btn btn-default" />
+                </div>
+            }
+        </div>
     }
 </div>
 
