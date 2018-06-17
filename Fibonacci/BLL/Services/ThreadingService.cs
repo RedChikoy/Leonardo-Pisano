@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Dto;
@@ -8,25 +12,32 @@ namespace BLL.Services
 {
     public class ThreadingService: IThreadingService
     {
-        internal readonly ICalculationService CalculationService;
-        internal readonly ITransportService TransportService;
+        private const int SleepTime = 500;
+        private const string ContinuerUrl = "http://localhost:63547";
+        private const string ApiCaclulateMethod = "api/сaclulate";
+
+        private static readonly HttpClient ContinuerClient = new HttpClient();
+
+        private readonly ICalculationService _calculationService;
+        private readonly IMessageBusService _messageBusService;
 
         public ThreadingService(
             ICalculationService calculationService,
-            ITransportService transportService)
+            IMessageBusService messageBusService)
         {
-            CalculationService = calculationService;
-            TransportService = transportService;
+            _calculationService = calculationService;
+            _messageBusService = messageBusService;
         }
 
         public void StartThreads(int count)
         {
             var container = ChislerContainer.GetInstance();
 
-            var tasks = new List<Task>();
+            //var tasks = new List<Task>();
             for (var i = 0; i < count; i++)
             {
-                tasks.Add(Task.Factory.StartNew(() => CalcTask(this, container.Token)));
+                //tasks.Add(Task.Factory.StartNew(() => CalcStarterTask(container.Token)));
+                Task.Factory.StartNew(() => CalcStarterTask(container.Token));
             }
         }
 
@@ -42,10 +53,18 @@ namespace BLL.Services
             return container.GetCurentCalcValues();
         }
 
-        private static void CalcTask(ThreadingService tService, CancellationToken token)
+        private void CalcStarterTask(CancellationToken token)
         {
-            //Флаг инициализации вычисления
-            var threadInited = false;
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+            var container = ChislerContainer.GetInstance();
+
+            //Добавляем подписку на очередь
+            _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
+            Debug.WriteLine($"Starter {threadId} подписан");
+
+            //Запускаем расчёт c 1
+            ProcessStarterCalculationsAsync(threadId, 1).GetAwaiter().GetResult();
+            Debug.WriteLine($"Starter {threadId} запущен");
 
             while (true)
             {
@@ -54,41 +73,84 @@ namespace BLL.Services
                     return;
                 }
 
-                var threadId = Thread.CurrentThread.ManagedThreadId;
-                var container = ChislerContainer.GetInstance();
-
-                //Проверяем очередь Rabbit для текущего потока
-                //TODO
-                var valueMq = threadInited ? GetMqValue(threadId) : 1;
+                //Проверяем сумку для текущего потока
+                var valueMq = container.GetFromBug(threadId);
 
                 //Если в очереди есть значение, то вычисляем и отправляем дальше
-                if (valueMq.HasValue)
+                if (valueMq != null)
                 {
-                    threadInited = true;
-
-                    //Расчёт
-                    var currentValue = container.GetCalcValue(threadId);
-                    var newValue = tService.CalculationService.Calculate(valueMq.Value, currentValue.Value);
-
-                    //Обновление контейнера результатов
-                    container.UpdateCalcValue(threadId, newValue);
-
-                    //Отправка через API
-                    //TODO
+                    //Запускаем расчёт
+                    ProcessStarterCalculationsAsync(threadId, valueMq.Value).GetAwaiter();
+                    Debug.WriteLine($"Starter {threadId} вычислил");
+                }
+                else
+                {
+                    Debug.WriteLine($"Starter {threadId} ждёт");
                 }
 
-                Thread.Sleep(500);
+                //Для наглядности
+                // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                if (SleepTime > 0)
+                {
+                    Thread.Sleep(SleepTime);
+                }
             }
         }
 
-        /// <summary>
-        /// Получить значение из очереди для потока
-        /// </summary>
-        /// <param name="threadId"></param>
-        /// <returns></returns>
-        private static int? GetMqValue(int threadId)
+        private async Task ProcessStarterCalculationsAsync(int threadId, int valueСontinuer)
         {
-            return 3;
+            var newChisler = _calculationService.Calculate(threadId, valueСontinuer);
+
+            //Отправка через API
+            await SendToApiAsync(newChisler);
+        }
+
+        //TODO: разделить на разные классы (или даже библиотеки) логику для Starter и  для Continuer
+        /// <summary>
+        /// Отправить значение на API Continuer
+        /// </summary>
+        /// <param name="newChisler"></param>
+        private async Task SendToApiAsync(Chisler newChisler)
+        {
+            InitContinuerClient();
+
+            var response = await ContinuerClient.PostAsJsonAsync(ApiCaclulateMethod, newChisler);
+
+            Debug.WriteLine($"Starter {newChisler.ThreadId} отправил значение на три буквы");
+        }
+
+        private static void InitContinuerClient()
+        {
+            ContinuerClient.BaseAddress = new Uri(ContinuerUrl);
+            ContinuerClient.DefaultRequestHeaders.Accept.Clear();
+            ContinuerClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
+        private void ProcessСontinuerCalculations(Chisler starterChisler)
+        {
+            var newChisler = _calculationService.Calculate(starterChisler);
+
+            //Отправка через RabbitMQ
+            _messageBusService.SendForThread(newChisler.ThreadId, newChisler);
+        }
+
+        /// <summary>
+        /// Получить значение из очереди и положить в сумку
+        /// </summary>
+        /// <param name="value"></param>
+        private static void ReceiveValueFromMq(Chisler value)
+        {
+            var container = ChislerContainer.GetInstance();
+            container.PutToBug(value);
+        }
+
+        /// <summary>
+        /// Запустить вычисление Сontinuer
+        /// </summary>
+        /// <param name="value"></param>
+        public void StartСontinuerThread(Chisler value)
+        {
+            Task.Factory.StartNew(() => ProcessСontinuerCalculations(value));
         }
     }
 }

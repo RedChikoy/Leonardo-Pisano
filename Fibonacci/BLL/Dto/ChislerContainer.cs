@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -6,17 +7,19 @@ namespace BLL.Dto
 {
     public class ChislerContainer
     {
-        private static object syncRoot = new object();
+        private static readonly object SyncRoot = new object();
 
         private static ChislerContainer _instance;
 
-        private List<Chisler> _calcValues;
+        private readonly List<Chisler> _calcValues;
+        private ConcurrentDictionary<int, Chisler> _mqBug;
 
         public CancellationToken Token { get; }
         public CancellationTokenSource TokenSource { get; }
 
         private ChislerContainer()
         {
+            _mqBug = new ConcurrentDictionary<int, Chisler>();
             TokenSource = new CancellationTokenSource();
             Token = TokenSource.Token;
 
@@ -27,7 +30,7 @@ namespace BLL.Dto
         {
             if (_instance == null)
             {
-                lock (syncRoot)
+                lock (SyncRoot)
                 {
                     if (_instance == null)
                     {
@@ -42,7 +45,7 @@ namespace BLL.Dto
         {
             var result = _calcValues.SingleOrDefault(ch => ch.ThreadId == threadId);
 
-            lock (syncRoot)
+            lock (SyncRoot)
             {
                 if (result == null)
                 {
@@ -54,11 +57,17 @@ namespace BLL.Dto
             return result;
         }
 
-        public void UpdateCalcValue(int threadId, int newValue)
+        /// <summary>
+        /// Обновить значение высчисления и вернуть
+        /// </summary>
+        /// <param name="threadId"></param>
+        /// <param name="newValue"></param>
+        /// <returns></returns>
+        public Chisler UpdateCalcValue(int threadId, int newValue)
         {
             var result = _calcValues.SingleOrDefault(ch => ch.ThreadId == threadId);
 
-            lock (syncRoot)
+            lock (SyncRoot)
             {
                 if (result == null)
                 {
@@ -70,11 +79,25 @@ namespace BLL.Dto
                     result.Value = newValue;
                 }
             }
+
+            return result;
         }
 
         public IEnumerable<Chisler> GetCurentCalcValues()
         {
             return _calcValues;
+        }
+
+        public void PutToBug(Chisler value)
+        {
+            _mqBug.TryAdd(value.ThreadId, value);
+        }
+
+        public Chisler GetFromBug(int threadId)
+        {
+            _mqBug.TryRemove(threadId, out var value);
+
+            return value;
         }
     }
 }

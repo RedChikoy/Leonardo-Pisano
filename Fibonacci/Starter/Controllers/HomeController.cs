@@ -13,9 +13,9 @@ namespace Starter.Controllers
         public HomeController()
         {
             ICalculationService calculationService = new CalculationService();
-            ITransportService transportService = new TransportSevice();
+            IMessageBusService messageBusService = new EasyNetQService();
 
-            _threadingService = new ThreadingService(calculationService, transportService);
+            _threadingService = new ThreadingService(calculationService, messageBusService);
         }
 
         public ActionResult Index()
@@ -47,6 +47,7 @@ namespace Starter.Controllers
             var values = _threadingService.GetCurrentValues();
 
             //TODO Доделать вывод
+
             var model = new StarterModel {IsCalcStarted = true};
             return View("Index", model);
         }

@@ -1,6 +1,0 @@
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\bin\Debug\BLL.dll
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\bin\Debug\BLL.pdb
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\obj\Debug\BLL.csprojResolveAssemblyReference.cache
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\obj\Debug\BLL.csproj.CoreCompileInputs.cache
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\obj\Debug\BLL.dll
-c:\Projects\Leonardo-Pisano\Fibonacci\BLL\obj\Debug\BLL.pdb
