@@ -20,7 +20,7 @@ namespace BLL.Interfaces
         /// <summary>
         /// Получить результаты вычисления из контейнера
         /// </summary>
-        IEnumerable<Chisler> GetCurrentValues();
+        IEnumerable<Chisler> GetCurrentValues(CalcRequestEnum сalcRequest);
 
         /// <summary>
         /// Запустить вычисление Сontinuer

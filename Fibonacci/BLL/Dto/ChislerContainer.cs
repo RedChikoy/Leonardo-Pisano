@@ -11,19 +11,19 @@ namespace BLL.Dto
 
         private static ChislerContainer _instance;
 
-        private readonly List<Chisler> _calcValues;
-        private ConcurrentDictionary<int, Chisler> _mqBug;
+        private readonly List<Chisler> _starterValues;
+        private readonly List<Chisler> _continuerValues;
+        private readonly ConcurrentDictionary<int, Chisler> _mqBug;
 
-        public CancellationToken Token { get; }
-        public CancellationTokenSource TokenSource { get; }
+        public CancellationToken Token { get; private set; }
+        public CancellationTokenSource TokenSource { get; private set; }
 
         private ChislerContainer()
         {
             _mqBug = new ConcurrentDictionary<int, Chisler>();
-            TokenSource = new CancellationTokenSource();
-            Token = TokenSource.Token;
-
-            _calcValues = new List<Chisler>();
+            _starterValues = new List<Chisler>();
+            _continuerValues = new List<Chisler>();
+            ResetToken();
         }
 
         public static ChislerContainer GetInstance()
@@ -41,16 +41,17 @@ namespace BLL.Dto
             return _instance;
         }
 
-        public Chisler GetCalcValue(int threadId)
+        public Chisler GetCalcValue(int threadId, CalcRequestEnum сalcRequest)
         {
-            var result = _calcValues.SingleOrDefault(ch => ch.ThreadId == threadId);
+            Chisler result;
 
             lock (SyncRoot)
             {
+                result = GetСalcValues(сalcRequest).SingleOrDefault(ch => ch.ThreadId == threadId);
                 if (result == null)
                 {
                     result = new Chisler {ThreadId = threadId, Value = 1};
-                    _calcValues.Add(result);
+                    GetСalcValues(сalcRequest).Add(result);
                 }
             }
 
@@ -62,17 +63,19 @@ namespace BLL.Dto
         /// </summary>
         /// <param name="threadId"></param>
         /// <param name="newValue"></param>
+        /// <param name="сalcRequest"></param>
         /// <returns></returns>
-        public Chisler UpdateCalcValue(int threadId, int newValue)
+        public Chisler UpdateCalcValue(int threadId, int newValue, CalcRequestEnum сalcRequest)
         {
-            var result = _calcValues.SingleOrDefault(ch => ch.ThreadId == threadId);
+            Chisler result;
 
             lock (SyncRoot)
             {
+                result = GetСalcValues(сalcRequest).SingleOrDefault(ch => ch.ThreadId == threadId);
                 if (result == null)
                 {
                     result = new Chisler { ThreadId = threadId, Value = newValue };
-                    _calcValues.Add(result);
+                    GetСalcValues(сalcRequest).Add(result);
                 }
                 else
                 {
@@ -83,9 +86,9 @@ namespace BLL.Dto
             return result;
         }
 
-        public IEnumerable<Chisler> GetCurentCalcValues()
+        public IEnumerable<Chisler> GetCurentCalcValues(CalcRequestEnum сalcRequest)
         {
-            return _calcValues;
+            return GetСalcValues(сalcRequest);
         }
 
         public void PutToBug(Chisler value)
@@ -98,6 +101,32 @@ namespace BLL.Dto
             _mqBug.TryRemove(threadId, out var value);
 
             return value;
+        }
+
+        public void ClearBug()
+        {
+            _mqBug.Clear();
+        }
+
+        public void ResetToken()
+        {
+            TokenSource = new CancellationTokenSource();
+            Token = TokenSource.Token;
+        }
+
+        public void Reset()
+        {
+            _starterValues.Clear();
+            _continuerValues.Clear();
+            ClearBug();
+            ResetToken();
+        }
+
+        private List<Chisler> GetСalcValues(CalcRequestEnum сalcRequest)
+        {
+            return сalcRequest == CalcRequestEnum.Starter
+                ? _starterValues
+                : _continuerValues;
         }
     }
 }

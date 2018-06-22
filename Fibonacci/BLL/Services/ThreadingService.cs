@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Dto;
@@ -12,32 +9,30 @@ namespace BLL.Services
 {
     public class ThreadingService: IThreadingService
     {
-        private const int SleepTime = 500;
-        private const string ContinuerUrl = "http://localhost:63547";
-        private const string ApiCaclulateMethod = "api/сaclulate";
-
-        private static readonly HttpClient ContinuerClient = new HttpClient();
+        private const int SleepTime = 5;
 
         private readonly ICalculationService _calculationService;
         private readonly IMessageBusService _messageBusService;
+        private readonly IApiTransportService _apiTransportService;
 
         public ThreadingService(
             ICalculationService calculationService,
-            IMessageBusService messageBusService)
+            IMessageBusService messageBusService,
+            IApiTransportService apiTransportService)
         {
             _calculationService = calculationService;
             _messageBusService = messageBusService;
+            _apiTransportService = apiTransportService;
         }
 
         public void StartThreads(int count)
         {
             var container = ChislerContainer.GetInstance();
+            container.Reset();
 
-            //var tasks = new List<Task>();
             for (var i = 0; i < count; i++)
             {
-                //tasks.Add(Task.Factory.StartNew(() => CalcStarterTask(container.Token)));
-                Task.Factory.StartNew(() => CalcStarterTask(container.Token));
+                Task.Factory.StartNew(() => CalcTasksStarter(container.Token));
             }
         }
 
@@ -47,19 +42,21 @@ namespace BLL.Services
             container.TokenSource.Cancel();
         }
 
-        public IEnumerable<Chisler> GetCurrentValues()
+        public IEnumerable<Chisler> GetCurrentValues(CalcRequestEnum сalcRequest)
         {
             var container = ChislerContainer.GetInstance();
-            return container.GetCurentCalcValues();
+            return container.GetCurentCalcValues(сalcRequest);
         }
 
-        private void CalcStarterTask(CancellationToken token)
+        private void CalcTasksStarter(CancellationToken token)
         {
             var threadId = Thread.CurrentThread.ManagedThreadId;
             var container = ChislerContainer.GetInstance();
 
             //Добавляем подписку на очередь
-            _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
+            var receiveKiller = _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
+            //var receiveKiller = 
+            //    _messageBusService.Subscribe<Chisler>(threadId, $"Subs:{threadId}", ReceiveValueFromMq);
             Debug.WriteLine($"Starter {threadId} подписан");
 
             //Запускаем расчёт c 1
@@ -70,6 +67,11 @@ namespace BLL.Services
             {
                 if (token.IsCancellationRequested)
                 {
+                    receiveKiller.Dispose();
+
+                    //TODO Добавить удаление очереди потока
+                    //_messageBusService.
+
                     return;
                 }
 
@@ -81,10 +83,14 @@ namespace BLL.Services
                 {
                     //Запускаем расчёт
                     ProcessStarterCalculationsAsync(threadId, valueMq.Value).GetAwaiter();
+
                     Debug.WriteLine($"Starter {threadId} вычислил");
                 }
                 else
                 {
+                    receiveKiller = _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
+                    //receiveKiller =
+                    //    _messageBusService.Subscribe<Chisler>(threadId, $"Subs:{threadId}", ReceiveValueFromMq);
                     Debug.WriteLine($"Starter {threadId} ждёт");
                 }
 
@@ -99,7 +105,7 @@ namespace BLL.Services
 
         private async Task ProcessStarterCalculationsAsync(int threadId, int valueСontinuer)
         {
-            var newChisler = _calculationService.Calculate(threadId, valueСontinuer);
+            var newChisler = _calculationService.Calculate(threadId, valueСontinuer, CalcRequestEnum.Starter);
 
             //Отправка через API
             await SendToApiAsync(newChisler);
@@ -112,33 +118,25 @@ namespace BLL.Services
         /// <param name="newChisler"></param>
         private async Task SendToApiAsync(Chisler newChisler)
         {
-            InitContinuerClient();
+            var result = await _apiTransportService.SendValueAsync(newChisler);
 
-            var response = await ContinuerClient.PostAsJsonAsync(ApiCaclulateMethod, newChisler);
-
-            Debug.WriteLine($"Starter {newChisler.ThreadId} отправил значение на три буквы");
-        }
-
-        private static void InitContinuerClient()
-        {
-            ContinuerClient.BaseAddress = new Uri(ContinuerUrl);
-            ContinuerClient.DefaultRequestHeaders.Accept.Clear();
-            ContinuerClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            Debug.WriteLine($"Starter {newChisler.ThreadId} отправил значение. StatusCode: {result.StatusCode}");
         }
 
         private void ProcessСontinuerCalculations(Chisler starterChisler)
         {
-            var newChisler = _calculationService.Calculate(starterChisler);
+            var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
 
             //Отправка через RabbitMQ
             _messageBusService.SendForThread(newChisler.ThreadId, newChisler);
+            //_messageBusService.Publish(newChisler.ThreadId, newChisler);
         }
 
         /// <summary>
         /// Получить значение из очереди и положить в сумку
         /// </summary>
         /// <param name="value"></param>
-        private static void ReceiveValueFromMq(Chisler value)
+        public void ReceiveValueFromMq(Chisler value)
         {
             var container = ChislerContainer.GetInstance();
             container.PutToBug(value);

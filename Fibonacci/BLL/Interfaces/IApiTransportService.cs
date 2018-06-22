@@ -1,10 +1,12 @@
 ﻿
+using System.Net.Http;
+using System.Threading.Tasks;
 using BLL.Dto;
 
 namespace BLL.Interfaces
 {
     public interface IApiTransportService
     {
-        void SendValue(Chisler value);
+        Task<HttpResponseMessage> SendValueAsync(Chisler value);
     }
 }

@@ -1,11 +1,12 @@
-﻿using BLL.Dto;
-using System.Web.Mvc;
+﻿using System.Web.Http;
+using BLL.Dto;
 using BLL.Interfaces;
 using BLL.Services;
 
 namespace Сontinuer.Controllers
 {
-    public class CalcController : Controller
+    [RoutePrefix("api")]
+    public class CalcController : ApiController
     {
         //TODO Прикрутить DI, если будет время
         private readonly IThreadingService _threadingService;
@@ -14,11 +15,12 @@ namespace Сontinuer.Controllers
         {
             ICalculationService calculationService = new CalculationService();
             IMessageBusService messageBusService = new EasyNetQService();
+            IApiTransportService apiTransportService = new ApiTransportService();
 
-            _threadingService = new ThreadingService(calculationService, messageBusService);
+            _threadingService = new ThreadingService(calculationService, messageBusService, apiTransportService);
         }
 
-        [Route("api/сaclulate")]
+        [Route("caclulate")]
         [HttpPost]
         public void Caclulate(Chisler value)
         {

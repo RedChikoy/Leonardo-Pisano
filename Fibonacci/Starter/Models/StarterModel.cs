@@ -1,6 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
+using BLL.Dto;
 
-namespace First.Models
+namespace Starter.Models
 {
     /// <summary>
     /// Модель стартера расчётов
@@ -16,5 +17,7 @@ namespace First.Models
         /// Признак запуска расчётов
         /// </summary>
         public bool IsCalcStarted { get; set; }
+
+        public IEnumerable<Chisler> CalcValues { get; set; }
     }
 }

@@ -5,8 +5,8 @@ namespace BLL.Interfaces
 {
     public interface ICalculationService
     {
-        Chisler Calculate(Chisler chisler);
+        Chisler Calculate(Chisler chisler, CalcRequestEnum сalcRequest);
 
-        Chisler Calculate(int threadId, int newPart);
+        Chisler Calculate(int threadId, int newPart, CalcRequestEnum сalcRequest);
     }
 }

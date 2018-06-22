@@ -11,24 +11,24 @@ namespace BLL.Services
         private const string BusConn = "host=localhost:5672;virtualhost=/;username=guest;password=guest";
         private const string QueueNamePrefix = "LP.";
 
-        public void Publish<T>(T message) where T : class
+        public void Publish<T>(int threadId, T message) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    bus.Publish(message);
+                    bus.Publish(message, threadId.ToString());
                 }
             }
         }
 
-        public void Subscribe<T>(string subscriptionId, Action<T> handler) where T : class
+        public ISubscriptionResult Subscribe<T>(int threadId, string subscriptionId, Action<T> handler) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    bus.Subscribe(subscriptionId, handler);
+                    return bus.Subscribe(subscriptionId, handler, x => x.WithTopic(threadId.ToString()));
                 }
             }
         }
@@ -44,13 +44,13 @@ namespace BLL.Services
             }
         }
 
-        public void ReceiveForThread<T>(int threadId, Action<T> handler) where T : class
+        public IDisposable ReceiveForThread<T>(int threadId, Action<T> handler) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    bus.Subscribe(GetQueueName(threadId), handler);
+                    return bus.Receive(GetQueueName(threadId), handler);
                 }
             }
         }

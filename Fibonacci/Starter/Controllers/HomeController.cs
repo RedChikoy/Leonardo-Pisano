@@ -1,7 +1,8 @@
 ﻿using System.Web.Mvc;
+using BLL.Dto;
 using BLL.Interfaces;
 using BLL.Services;
-using First.Models;
+using Starter.Models;
 
 namespace Starter.Controllers
 {
@@ -14,8 +15,9 @@ namespace Starter.Controllers
         {
             ICalculationService calculationService = new CalculationService();
             IMessageBusService messageBusService = new EasyNetQService();
+            IApiTransportService apiTransportService = new ApiTransportService();
 
-            _threadingService = new ThreadingService(calculationService, messageBusService);
+            _threadingService = new ThreadingService(calculationService, messageBusService, apiTransportService);
         }
 
         public ActionResult Index()
@@ -44,11 +46,11 @@ namespace Starter.Controllers
         public ActionResult CheckCurrentResults()
         {
             //Получение результатов из потоков расчёта
-            var values = _threadingService.GetCurrentValues();
+            var values = _threadingService.GetCurrentValues(CalcRequestEnum.Starter);
 
             //TODO Доделать вывод
 
-            var model = new StarterModel {IsCalcStarted = true};
+            var model = new StarterModel { IsCalcStarted = true, CalcValues = values };
             return View("Index", model);
         }
 
