@@ -1,4 +1,4 @@
-﻿@model First.Models.StarterModel
+﻿@model Starter.Models.StarterModel
 
 <div class="jumbotron">
 
@@ -42,6 +42,20 @@
             }
         </div>
     }
+    
+    <div>
+        @if (Model.CalcValues != null && Model.CalcValues.Any())
+        {
+            foreach (var value in Model.CalcValues)
+            {
+                <p>Поток: @value.ThreadId Значение: @value.Value</p>
+            }
+        }
+        else
+        {
+            <p>Для получения текущих значений запустити вычисления и нажмите кнопку "Check values"</p>   
+        }
+    </div>
 </div>
 
 <!--TODO: Добавить отображение вычисления, хотя бы после остановки-->

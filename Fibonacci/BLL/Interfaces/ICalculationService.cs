@@ -1,8 +1,12 @@
 ﻿
+using BLL.Dto;
+
 namespace BLL.Interfaces
 {
     public interface ICalculationService
     {
-        int Calculate(int prevValue, int currentValue);
+        Chisler Calculate(Chisler chisler, CalcRequestEnum сalcRequest);
+
+        Chisler Calculate(int threadId, int newPart, CalcRequestEnum сalcRequest);
     }
 }

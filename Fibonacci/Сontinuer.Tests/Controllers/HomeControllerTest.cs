@@ -8,6 +8,7 @@ namespace Сontinuer.Tests.Controllers
     [TestClass]
     public class HomeControllerTest
     {
+        //TODO Написать тетсты, если будет время
         [TestMethod]
         public void Index()
         {
