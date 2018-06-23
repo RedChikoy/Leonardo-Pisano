@@ -15,5 +15,9 @@ namespace BLL.Interfaces
         void SendForThread<T>(int threadId, T message) where T : class;
 
         IDisposable ReceiveForThread<T>(int threadId, Action<T> handler) where T : class;
+
+        void AdvancedPublish<T>(int threadId, T message) where T : class;
+
+        IBasicGetResult<T> AdvancedGet<T>(int threadId) where T : class;
     }
 }
