@@ -9,7 +9,7 @@ namespace BLL.Services
 {
     public class ThreadingService: IThreadingService
     {
-        private const int SleepTime = 5;
+        private const int SleepTime = 500;
 
         private readonly ICalculationService _calculationService;
         private readonly IMessageBusService _messageBusService;
@@ -51,13 +51,6 @@ namespace BLL.Services
         private void CalcTasksStarter(CancellationToken token)
         {
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            var container = ChislerContainer.GetInstance();
-
-            //Добавляем подписку на очередь
-            var receiveKiller = _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
-            //var receiveKiller = 
-            //    _messageBusService.Subscribe<Chisler>(threadId, $"Subs:{threadId}", ReceiveValueFromMq);
-            Debug.WriteLine($"Starter {threadId} подписан");
 
             //Запускаем расчёт c 1
             ProcessStarterCalculationsAsync(threadId, 1).GetAwaiter().GetResult();
@@ -67,30 +60,23 @@ namespace BLL.Services
             {
                 if (token.IsCancellationRequested)
                 {
-                    receiveKiller.Dispose();
-
                     //TODO Добавить удаление очереди потока
                     //_messageBusService.
 
                     return;
                 }
 
-                //Проверяем сумку для текущего потока
-                var valueMq = container.GetFromBug(threadId);
-
-                //Если в очереди есть значение, то вычисляем и отправляем дальше
-                if (valueMq != null)
+                //Проверяем очередь
+                var valueMq = _messageBusService.AdvancedGet<Chisler>(threadId);
+                if (valueMq != null && valueMq.MessageAvailable)
                 {
                     //Запускаем расчёт
-                    ProcessStarterCalculationsAsync(threadId, valueMq.Value).GetAwaiter();
+                    ProcessStarterCalculationsAsync(threadId, valueMq.Message.Body.Value).GetAwaiter();
 
-                    Debug.WriteLine($"Starter {threadId} вычислил");
+                    Debug.WriteLine($"Starter {threadId} вычисляет.");
                 }
                 else
                 {
-                    receiveKiller = _messageBusService.ReceiveForThread<Chisler>(threadId, ReceiveValueFromMq);
-                    //receiveKiller =
-                    //    _messageBusService.Subscribe<Chisler>(threadId, $"Subs:{threadId}", ReceiveValueFromMq);
                     Debug.WriteLine($"Starter {threadId} ждёт");
                 }
 
@@ -127,21 +113,11 @@ namespace BLL.Services
         {
             var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
 
-            //Отправка через RabbitMQ
             _messageBusService.SendForThread(newChisler.ThreadId, newChisler);
-            //_messageBusService.Publish(newChisler.ThreadId, newChisler);
+            //_messageBusService.AdvancedPublish(newChisler.ThreadId, newChisler); - не отладил настройку, не работает
         }
 
-        /// <summary>
-        /// Получить значение из очереди и положить в сумку
-        /// </summary>
-        /// <param name="value"></param>
-        public void ReceiveValueFromMq(Chisler value)
-        {
-            var container = ChislerContainer.GetInstance();
-            container.PutToBug(value);
-        }
-
+        /// <inheritdoc />
         /// <summary>
         /// Запустить вычисление Сontinuer
         /// </summary>

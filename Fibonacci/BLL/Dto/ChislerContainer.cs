@@ -13,6 +13,9 @@ namespace BLL.Dto
 
         private readonly List<Chisler> _starterValues;
         private readonly List<Chisler> _continuerValues;
+
+        //Можно использовать сумку, когда сообщения получаются через Handler, а не напрямую из методом-клиентом очереди
+        //Метод-клиент при это проверяет наличие сообщения в сумке для него через методы контейнера
         private readonly ConcurrentDictionary<int, Chisler> _mqBug;
 
         public CancellationToken Token { get; private set; }
