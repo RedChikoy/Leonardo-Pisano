@@ -14,8 +14,8 @@ namespace Сontinuer.Controllers
         public CalcController()
         {
             ICalculationService calculationService = new CalculationService();
-            IApiService apiTransportService = new ApiService();
-            ITransportService transportService = new ApiTransportService(apiTransportService);
+            IMessageBusService messageService = new EasyNetQService();
+            ITransportService transportService = new ContinuerTransportService(messageService);
 
             _threadingService = new ThreadingService(calculationService, transportService);
         }

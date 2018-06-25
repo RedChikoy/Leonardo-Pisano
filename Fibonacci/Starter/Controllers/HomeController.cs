@@ -1,4 +1,5 @@
-﻿using System.Web.Mvc;
+﻿using System.Linq;
+using System.Web.Mvc;
 using BLL.Dto;
 using BLL.Interfaces;
 using BLL.Services;
@@ -16,7 +17,8 @@ namespace Starter.Controllers
             ICalculationService calculationService = new CalculationService();
 
             IMessageBusService messageBusService = new EasyNetQService();
-            ITransportService transportService = new RabbitTransportService(messageBusService);
+            IApiService apiService = new ApiService();
+            ITransportService transportService = new StarterTransportService(messageBusService, apiService);
 
             _threadingService = new ThreadingService(calculationService, transportService);
         }
@@ -47,11 +49,11 @@ namespace Starter.Controllers
         public ActionResult CheckCurrentResults()
         {
             //Получение результатов из потоков расчёта
-            var values = _threadingService.GetCurrentValues(CalcRequestEnum.Starter);
+            var values = _threadingService.GetCurrentValues(CalcRequestEnum.Starter).ToArray();
 
             //TODO Доделать вывод
 
-            var model = new StarterModel { IsCalcStarted = true, CalcValues = values };
+            var model = new StarterModel { IsCalcStarted = values.Any(), CalcValues = values };
             return View("Index", model);
         }
 

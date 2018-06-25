@@ -69,8 +69,8 @@
     <Compile Include="Services\ApiService.cs" />
     <Compile Include="Services\CalculationService.cs" />
     <Compile Include="Services\EasyNetQService.cs" />
-    <Compile Include="Services\ApiTransportService.cs" />
-    <Compile Include="Services\RabbitTransportService.cs" />
+    <Compile Include="Services\ContinuerTransportService.cs" />
+    <Compile Include="Services\StarterTransportService.cs" />
     <Compile Include="Services\ThreadingService.cs" />
   </ItemGroup>
   <ItemGroup>

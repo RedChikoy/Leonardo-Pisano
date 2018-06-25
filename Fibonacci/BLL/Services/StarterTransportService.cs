@@ -1,28 +1,30 @@
 ﻿
-using System;
 using System.Threading.Tasks;
 using BLL.Dto;
 using BLL.Interfaces;
 
 namespace BLL.Services
 {
-    public class RabbitTransportService: ITransportService
+    public class StarterTransportService: ITransportService
     {
         private static IMessageBusService _messageBusService;
+        private static IApiService _apiService;
 
-        public RabbitTransportService(IMessageBusService messageBusService)
+        public StarterTransportService(IMessageBusService messageBusService,
+            IApiService apiService)
         {
             _messageBusService = messageBusService;
+            _apiService = apiService;
         }
 
         public void Send(Chisler value)
         {
-            _messageBusService.SendForThread(value.ThreadId, value);
+            _apiService.SendValueAsync(value);
         }
 
         public async Task SendAsync(Chisler value)
         {
-            throw new NotImplementedException();
+            await _apiService.SendValueAsync(value);
         }
 
         public Chisler Get(int queueNumber)
