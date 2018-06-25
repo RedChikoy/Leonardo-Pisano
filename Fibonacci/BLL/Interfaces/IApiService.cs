@@ -5,7 +5,7 @@ using BLL.Dto;
 
 namespace BLL.Interfaces
 {
-    public interface IApiTransportService
+    public interface IApiService
     {
         Task<HttpResponseMessage> SendValueAsync(Chisler value);
     }

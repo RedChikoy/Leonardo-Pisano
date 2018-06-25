@@ -99,7 +99,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Controllers\HomeControllerTest.cs" />
+    <Compile Include="Transport\ApiTest.cs" />
+    <Compile Include="Transport\RabbitTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config" />
@@ -108,6 +109,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\BLL\BLL.csproj">
+      <Project>{5E20D4BE-96FF-4DBE-8CFC-9BDBD2F3A387}</Project>
+      <Name>BLL</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Сontinuer\Сontinuer.csproj">
       <Project>{FEE7FA5C-75F3-4544-B7CE-CCD315F45D0F}</Project>
       <Name>Сontinuer</Name>

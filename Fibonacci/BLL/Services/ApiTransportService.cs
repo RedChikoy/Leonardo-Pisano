@@ -1,37 +1,38 @@
 ﻿
 using System;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using BLL.Dto;
 using BLL.Interfaces;
-using System.Configuration;
 
 namespace BLL.Services
 {
-    public class ApiTransportService: IApiTransportService
+    public class ApiTransportService : ITransportService
     {
-        private const string ApiCaclulateMethod = "api/calc/сaclulate";
-        private static HttpClient ContinuerClient => InitContinuerClient();
+        private static IApiService _apiService;
 
-        public async Task<HttpResponseMessage> SendValueAsync(Chisler value)
+        public ApiTransportService(IApiService apiService)
         {
-            InitContinuerClient();
-
-            var response = await ContinuerClient.PostAsJsonAsync(ApiCaclulateMethod, value);
-
-            return response;
+            _apiService = apiService;
         }
 
-        private static HttpClient InitContinuerClient()
+        public void Send(Chisler value)
         {
-            var continuerUrl = ConfigurationManager.AppSettings["ContinuerApiUrl"];
+            _apiService.SendValueAsync(value);
+        }
 
-            var result = new HttpClient {BaseAddress = new Uri(continuerUrl)};
-            result.DefaultRequestHeaders.Accept.Clear();
-            result.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        public async Task SendAsync(Chisler value)
+        {
+            await _apiService.SendValueAsync(value);
+        }
 
-            return result;
+        public Chisler Get(int queueNumber)
+        {
+            throw new Exception("Не поддерживается. Получение осуществляется через механизмы ASP.Net WebApi.");
+        }
+
+        public void Close(int queueNumber)
+        {
+            throw new Exception("Не поддерживается. Закрывать не требуется.");
         }
     }
 }

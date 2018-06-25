@@ -14,10 +14,11 @@ namespace Starter.Controllers
         public HomeController()
         {
             ICalculationService calculationService = new CalculationService();
-            IMessageBusService messageBusService = new EasyNetQService();
-            IApiTransportService apiTransportService = new ApiTransportService();
 
-            _threadingService = new ThreadingService(calculationService, messageBusService, apiTransportService);
+            IMessageBusService messageBusService = new EasyNetQService();
+            ITransportService transportService = new RabbitTransportService(messageBusService);
+
+            _threadingService = new ThreadingService(calculationService, transportService);
         }
 
         public ActionResult Index()

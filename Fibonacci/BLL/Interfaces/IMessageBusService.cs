@@ -8,16 +8,18 @@ namespace BLL.Interfaces
     /// </summary>
     public interface IMessageBusService
     {
-        void Publish<T>(int threadId, T message) where T : class;
+        void Publish<T>(int queueNumber, T message) where T : class;
 
-        ISubscriptionResult Subscribe<T>(int threadId, string name, Action<T> handler) where T : class;
+        ISubscriptionResult Subscribe<T>(int queueNumber, string name, Action<T> handler) where T : class;
 
-        void SendForThread<T>(int threadId, T message) where T : class;
+        void SendForThread<T>(int queueNumber, T message) where T : class;
 
-        IDisposable ReceiveForThread<T>(int threadId, Action<T> handler) where T : class;
+        IDisposable ReceiveForThread<T>(int queueNumber, Action<T> handler) where T : class;
 
-        void AdvancedPublish<T>(int threadId, T message) where T : class;
+        void AdvancedPublish<T>(int queueNumber, T message) where T : class;
 
-        IBasicGetResult<T> AdvancedGet<T>(int threadId) where T : class;
+        IBasicGetResult<T> AdvancedGet<T>(int queueNumber) where T : class;
+
+        void DeleteQueue(int queueNumber);
     }
 }
