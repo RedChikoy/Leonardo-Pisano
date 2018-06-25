@@ -6,24 +6,25 @@ using BLL.Interfaces;
 
 namespace BLL.Services
 {
-    public class ApiTransportService : ITransportService
+    public class ContinuerTransportService : ITransportService
     {
-        private static IApiService _apiService;
+        private static IMessageBusService _messageBusService;
 
-        public ApiTransportService(IApiService apiService)
+        public ContinuerTransportService(IMessageBusService messageBusService)
         {
-            _apiService = apiService;
+            _messageBusService = messageBusService;
         }
 
         public void Send(Chisler value)
         {
-            _apiService.SendValueAsync(value);
+            _messageBusService.SendForThread(value.ThreadId, value);
         }
 
         public async Task SendAsync(Chisler value)
         {
-            await _apiService.SendValueAsync(value);
+            throw new NotImplementedException();
         }
+
 
         public Chisler Get(int queueNumber)
         {

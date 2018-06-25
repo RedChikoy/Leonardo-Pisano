@@ -13,7 +13,8 @@ namespace Сontinuer.Tests.Transport
         {
             var message = new Chisler { ThreadId = 1, Value = 5 };
             IMessageBusService messageBus = new EasyNetQService();
-            ITransportService transportService = new RabbitTransportService(messageBus);
+            IApiService apiService = new ApiService();
+            ITransportService transportService = new StarterTransportService(messageBus, apiService);
 
             transportService.Send(message);
 
