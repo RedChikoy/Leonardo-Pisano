@@ -13,26 +13,26 @@ namespace Сontinuer.Tests.Transport
         public void SendMessageToApi()
         {
             var message = new Chisler { ThreadId = 1, Value = 5 };
-            IApiService apiBus = new ApiService();
-            ITransportService apiService = new ApiTransportService(apiBus);
+            IMessageBusService messageBus = new EasyNetQService();
+            ITransportService continuerService = new ContinuerTransportService(messageBus);
 
-            var responce = apiService.SendAsync(message);
+            var responce = continuerService.SendAsync(message);
 
             //Необходимо указать настройку ContinuerApiUrl и запустить сервис
             Assert.IsNull(responce.Exception);
             Assert.IsTrue(responce.IsCompleted);
 
-            Assert.ThrowsException<Exception>(() => apiService.Get(message.ThreadId));
+            Assert.ThrowsException<Exception>(() => continuerService.Get(message.ThreadId));
 
-            IMessageBusService messageBus = new EasyNetQService();
-            ITransportService messageService = new RabbitTransportService(messageBus);
+            IApiService apiService = new ApiService();
+            ITransportService starterService = new StarterTransportService(messageBus, apiService);
 
-            var result = messageService.Get(message.ThreadId);
+            var result = starterService.Get(message.ThreadId);
 
             Assert.IsNotNull(result);
             Assert.AreEqual(message.Value, result.Value);
 
-            messageService.Close(message.ThreadId);
+            starterService.Close(message.ThreadId);
         }
     }
 }
