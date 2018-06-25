@@ -14,10 +14,10 @@ namespace Сontinuer.Controllers
         public CalcController()
         {
             ICalculationService calculationService = new CalculationService();
-            IMessageBusService messageBusService = new EasyNetQService();
-            IApiTransportService apiTransportService = new ApiTransportService();
+            IApiService apiTransportService = new ApiService();
+            ITransportService transportService = new ApiTransportService(apiTransportService);
 
-            _threadingService = new ThreadingService(calculationService, messageBusService, apiTransportService);
+            _threadingService = new ThreadingService(calculationService, transportService);
         }
 
         [Route("caclulate")]

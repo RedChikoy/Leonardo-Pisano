@@ -12,17 +12,12 @@ namespace BLL.Services
         private const int SleepTime = 500;
 
         private readonly ICalculationService _calculationService;
-        private readonly IMessageBusService _messageBusService;
-        private readonly IApiTransportService _apiTransportService;
+        private readonly ITransportService _transportService;
 
-        public ThreadingService(
-            ICalculationService calculationService,
-            IMessageBusService messageBusService,
-            IApiTransportService apiTransportService)
+        public ThreadingService(ICalculationService calculationService, ITransportService transportService)
         {
             _calculationService = calculationService;
-            _messageBusService = messageBusService;
-            _apiTransportService = apiTransportService;
+            _transportService = transportService;
         }
 
         public void StartThreads(int count)
@@ -60,18 +55,15 @@ namespace BLL.Services
             {
                 if (token.IsCancellationRequested)
                 {
-                    //TODO Добавить удаление очереди потока
-                    //_messageBusService.
-
                     return;
                 }
 
                 //Проверяем очередь
-                var valueMq = _messageBusService.AdvancedGet<Chisler>(threadId);
-                if (valueMq != null && valueMq.MessageAvailable)
+                var valueMq = _transportService.Get(threadId);
+                if (valueMq != null)
                 {
                     //Запускаем расчёт
-                    ProcessStarterCalculationsAsync(threadId, valueMq.Message.Body.Value).GetAwaiter();
+                    ProcessStarterCalculationsAsync(threadId, valueMq.Value).GetAwaiter();
 
                     Debug.WriteLine($"Starter {threadId} вычисляет.");
                 }
@@ -93,28 +85,14 @@ namespace BLL.Services
         {
             var newChisler = _calculationService.Calculate(threadId, valueСontinuer, CalcRequestEnum.Starter);
 
-            //Отправка через API
-            await SendToApiAsync(newChisler);
-        }
-
-        //TODO: разделить на разные классы (или даже библиотеки) логику для Starter и  для Continuer
-        /// <summary>
-        /// Отправить значение на API Continuer
-        /// </summary>
-        /// <param name="newChisler"></param>
-        private async Task SendToApiAsync(Chisler newChisler)
-        {
-            var result = await _apiTransportService.SendValueAsync(newChisler);
-
-            Debug.WriteLine($"Starter {newChisler.ThreadId} отправил значение. StatusCode: {result.StatusCode}");
+            await _transportService.SendAsync(newChisler);
         }
 
         private void ProcessСontinuerCalculations(Chisler starterChisler)
         {
             var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
 
-            _messageBusService.SendForThread(newChisler.ThreadId, newChisler);
-            //_messageBusService.AdvancedPublish(newChisler.ThreadId, newChisler); - не отладил настройку, не работает
+            _transportService.Send(newChisler);
         }
 
         /// <inheritdoc />

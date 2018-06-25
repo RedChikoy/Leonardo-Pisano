@@ -59,15 +59,18 @@
   <ItemGroup>
     <Compile Include="Dto\CalcRequestEnum.cs" />
     <Compile Include="Dto\ChislerContainer.cs" />
-    <Compile Include="Interfaces\IApiTransportService.cs" />
+    <Compile Include="Interfaces\IApiService.cs" />
     <Compile Include="Interfaces\ICalculationService.cs" />
     <Compile Include="Dto\Chisler.cs" />
     <Compile Include="Interfaces\IMessageBusService.cs" />
     <Compile Include="Interfaces\IThreadingService.cs" />
+    <Compile Include="Interfaces\ITransportService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\ApiTransportService.cs" />
+    <Compile Include="Services\ApiService.cs" />
     <Compile Include="Services\CalculationService.cs" />
     <Compile Include="Services\EasyNetQService.cs" />
+    <Compile Include="Services\ApiTransportService.cs" />
+    <Compile Include="Services\RabbitTransportService.cs" />
     <Compile Include="Services\ThreadingService.cs" />
   </ItemGroup>
   <ItemGroup>
