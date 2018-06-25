@@ -12,51 +12,51 @@ namespace BLL.Services
         private const string BusConn = "host=localhost:5672;virtualhost=/;username=guest;password=guest;timeout=120";
         private const string QueueNamePrefix = "LP.";
 
-        public void Publish<T>(int threadId, T message) where T : class
+        public void Publish<T>(int queueNumber, T message) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    bus.Publish(message, threadId.ToString());
+                    bus.Publish(message, queueNumber.ToString());
                 }
             }
         }
 
-        public ISubscriptionResult Subscribe<T>(int threadId, string subscriptionId, Action<T> handler) where T : class
+        public ISubscriptionResult Subscribe<T>(int queueNumber, string subscriptionId, Action<T> handler) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    return bus.Subscribe(subscriptionId, handler, x => x.WithTopic(threadId.ToString()));
+                    return bus.Subscribe(subscriptionId, handler, x => x.WithTopic(queueNumber.ToString()));
                 }
             }
         }
 
-        public void SendForThread<T>(int threadId, T message) where T : class
+        public void SendForThread<T>(int queueNumber, T message) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    bus.Send(GetQueueName(threadId), message);
+                    bus.Send(GetQueueName(queueNumber), message);
                 }
             }
         }
 
-        public IDisposable ReceiveForThread<T>(int threadId, Action<T> handler) where T : class
+        public IDisposable ReceiveForThread<T>(int queueNumber, Action<T> handler) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
-                    return bus.Receive(GetQueueName(threadId), handler);
+                    return bus.Receive(GetQueueName(queueNumber), handler);
                 }
             }
         }
 
-        public void AdvancedPublish<T>(int threadId, T message) where T : class
+        public void AdvancedPublish<T>(int queueNumber, T message) where T : class
         {
             lock (SyncRoot)
             {
@@ -64,21 +64,21 @@ namespace BLL.Services
                 {
                     var advancedBus = bus.Advanced;
                     var mqMessage = new Message<T>(message);
-                    var queueName = GetQueueName(threadId);
+                    var queueName = GetQueueName(queueNumber);
                     //var prop = new MessageProperties();
                     advancedBus.Publish(Exchange.GetDefault(), queueName, false, mqMessage);
                 }
             }
         }
 
-        public IBasicGetResult<T> AdvancedGet<T>(int threadId) where T : class
+        public IBasicGetResult<T> AdvancedGet<T>(int queueNumber) where T : class
         {
             lock (SyncRoot)
             {
                 using (var bus = RabbitHutch.CreateBus(BusConn))
                 {
                     var advancedBus = bus.Advanced;
-                    var queue = advancedBus.QueueDeclare(GetQueueName(threadId));
+                    var queue = advancedBus.QueueDeclare(GetQueueName(queueNumber));
                     var message = advancedBus.Get<T>(queue);
 
                     return message;
@@ -86,9 +86,9 @@ namespace BLL.Services
             }
         }
 
-        private static string GetQueueName(int threadId)
+        private static string GetQueueName(int queueNumber)
         {
-            return $"{QueueNamePrefix}{threadId}";
+            return $"{QueueNamePrefix}{queueNumber}";
         }
     }
 }

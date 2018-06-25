@@ -12,17 +12,12 @@ namespace BLL.Services
         private const int SleepTime = 500;
 
         private readonly ICalculationService _calculationService;
-        private readonly IMessageBusService _messageBusService;
-        private readonly IApiTransportService _apiTransportService;
+        private readonly ITransportService _transportService;
 
-        public ThreadingService(
-            ICalculationService calculationService,
-            IMessageBusService messageBusService,
-            IApiTransportService apiTransportService)
+        public ThreadingService(ICalculationService calculationService, ITransportService transportService)
         {
             _calculationService = calculationService;
-            _messageBusService = messageBusService;
-            _apiTransportService = apiTransportService;
+            _transportService = transportService;
         }
 
         public void StartThreads(int count)
@@ -67,11 +62,11 @@ namespace BLL.Services
                 }
 
                 //Проверяем очередь
-                var valueMq = _messageBusService.AdvancedGet<Chisler>(threadId);
-                if (valueMq != null && valueMq.MessageAvailable)
+                var valueMq = _transportService.Get(threadId);
+                if (valueMq != null)
                 {
                     //Запускаем расчёт
-                    ProcessStarterCalculationsAsync(threadId, valueMq.Message.Body.Value).GetAwaiter();
+                    ProcessStarterCalculationsAsync(threadId, valueMq.Value).GetAwaiter();
 
                     Debug.WriteLine($"Starter {threadId} вычисляет.");
                 }
@@ -113,7 +108,7 @@ namespace BLL.Services
         {
             var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
 
-            _messageBusService.SendForThread(newChisler.ThreadId, newChisler);
+            _transportService.Send(newChisler);
             //_messageBusService.AdvancedPublish(newChisler.ThreadId, newChisler); - не отладил настройку, не работает
         }
 
