@@ -55,9 +55,6 @@ namespace BLL.Services
             {
                 if (token.IsCancellationRequested)
                 {
-                    //TODO Добавить удаление очереди потока
-                    //_messageBusService.
-
                     return;
                 }
 
@@ -88,20 +85,7 @@ namespace BLL.Services
         {
             var newChisler = _calculationService.Calculate(threadId, valueСontinuer, CalcRequestEnum.Starter);
 
-            //Отправка через API
-            await SendToApiAsync(newChisler);
-        }
-
-        //TODO: разделить на разные классы (или даже библиотеки) логику для Starter и  для Continuer
-        /// <summary>
-        /// Отправить значение на API Continuer
-        /// </summary>
-        /// <param name="newChisler"></param>
-        private async Task SendToApiAsync(Chisler newChisler)
-        {
-            var result = await _apiTransportService.SendValueAsync(newChisler);
-
-            Debug.WriteLine($"Starter {newChisler.ThreadId} отправил значение. StatusCode: {result.StatusCode}");
+            await _transportService.SendAsync(newChisler);
         }
 
         private void ProcessСontinuerCalculations(Chisler starterChisler)
@@ -109,7 +93,6 @@ namespace BLL.Services
             var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
 
             _transportService.Send(newChisler);
-            //_messageBusService.AdvancedPublish(newChisler.ThreadId, newChisler); - не отладил настройку, не работает
         }
 
         /// <inheritdoc />

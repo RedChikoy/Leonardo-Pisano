@@ -86,6 +86,19 @@ namespace BLL.Services
             }
         }
 
+        public void DeleteQueue(int queueNumber)
+        {
+            lock (SyncRoot)
+            {
+                using (var bus = RabbitHutch.CreateBus(BusConn))
+                {
+                    var advancedBus = bus.Advanced;
+                    var queue = advancedBus.QueueDeclare(GetQueueName(queueNumber));
+                    advancedBus.QueueDelete(queue);
+                }
+            }
+        }
+
         private static string GetQueueName(int queueNumber)
         {
             return $"{QueueNamePrefix}{queueNumber}";

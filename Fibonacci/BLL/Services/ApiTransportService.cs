@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Threading.Tasks;
 using BLL.Dto;
 using BLL.Interfaces;
 
@@ -19,9 +20,19 @@ namespace BLL.Services
             _apiService.SendValueAsync(value);
         }
 
+        public async Task SendAsync(Chisler value)
+        {
+            await _apiService.SendValueAsync(value);
+        }
+
         public Chisler Get(int queueNumber)
         {
-            throw new Exception("Не поддерживается. Получение осуществляется через механизмы ASP.Net WebApi");
+            throw new Exception("Не поддерживается. Получение осуществляется через механизмы ASP.Net WebApi.");
+        }
+
+        public void Close(int queueNumber)
+        {
+            throw new Exception("Не поддерживается. Закрывать не требуется.");
         }
     }
 }

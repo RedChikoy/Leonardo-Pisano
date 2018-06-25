@@ -1,4 +1,6 @@
 ﻿
+using System;
+using System.Threading.Tasks;
 using BLL.Dto;
 using BLL.Interfaces;
 
@@ -18,6 +20,11 @@ namespace BLL.Services
             _messageBusService.SendForThread(value.ThreadId, value);
         }
 
+        public async Task SendAsync(Chisler value)
+        {
+            throw new NotImplementedException();
+        }
+
         public Chisler Get(int queueNumber)
         {
             var message = _messageBusService.AdvancedGet<Chisler>(queueNumber);
@@ -27,6 +34,11 @@ namespace BLL.Services
             }
 
             return null;
+        }
+
+        public void Close(int queueNumber)
+        {
+            _messageBusService.DeleteQueue(queueNumber);
         }
     }
 }

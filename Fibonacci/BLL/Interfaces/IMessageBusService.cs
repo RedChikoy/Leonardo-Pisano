@@ -19,5 +19,7 @@ namespace BLL.Interfaces
         void AdvancedPublish<T>(int queueNumber, T message) where T : class;
 
         IBasicGetResult<T> AdvancedGet<T>(int queueNumber) where T : class;
+
+        void DeleteQueue(int queueNumber);
     }
 }
