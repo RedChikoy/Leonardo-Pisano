@@ -55,6 +55,7 @@ namespace BLL.Services
             {
                 if (token.IsCancellationRequested)
                 {
+                    _transportService.Close(threadId);
                     return;
                 }
 
