@@ -9,7 +9,7 @@ using System.Configuration;
 
 namespace BLL.Services
 {
-    public class ApiService: IApiService
+    public class CalculationApiService: IApiService
     {
         private const string ApiCaclulateMethod = "api/calc/сaclulate";
         private static HttpClient ContinuerClient => InitContinuerClient();

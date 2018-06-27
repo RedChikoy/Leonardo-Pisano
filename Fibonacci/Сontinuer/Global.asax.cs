@@ -10,6 +10,8 @@ namespace Сontinuer
     {
         protected void Application_Start()
         {
+            AutofacConfig.ConfigureContainer();
+
             AreaRegistration.RegisterAllAreas();
             GlobalConfiguration.Configure(WebApiConfig.Register);
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
