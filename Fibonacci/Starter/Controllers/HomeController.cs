@@ -17,7 +17,7 @@ namespace Starter.Controllers
             ICalculationService calculationService = new CalculationService();
 
             IMessageBusService messageBusService = new EasyNetQService();
-            IApiService apiService = new ApiService();
+            IApiService apiService = new CalculationApiService();
             ITransportService transportService = new StarterTransportService(messageBusService, apiService);
 
             _threadingService = new ThreadingService(calculationService, transportService);

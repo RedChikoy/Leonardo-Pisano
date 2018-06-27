@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using BLL.Dto;
+using BLL.Helpers;
 using BLL.Interfaces;
 
 namespace BLL.Services
@@ -84,14 +85,16 @@ namespace BLL.Services
 
         private async Task ProcessStarterCalculationsAsync(int threadId, int valueСontinuer)
         {
-            var newChisler = _calculationService.Calculate(threadId, valueСontinuer, CalcRequestEnum.Starter);
+            var newChisler = _calculationService.Calculate(threadId, valueСontinuer, 
+                CalcRequestEnum.Starter, FormulaHelper.SumIntCalculator());
 
             await _transportService.SendAsync(newChisler);
         }
 
         private void ProcessСontinuerCalculations(Chisler starterChisler)
         {
-            var newChisler = _calculationService.Calculate(starterChisler, CalcRequestEnum.Continuer);
+            var newChisler = _calculationService.Calculate(starterChisler, 
+                CalcRequestEnum.Continuer, FormulaHelper.SumIntCalculator());
 
             _transportService.Send(newChisler);
         }

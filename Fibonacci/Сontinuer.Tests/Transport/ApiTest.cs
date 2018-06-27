@@ -24,7 +24,7 @@ namespace Сontinuer.Tests.Transport
 
             Assert.ThrowsException<Exception>(() => continuerService.Get(message.ThreadId));
 
-            IApiService apiService = new ApiService();
+            IApiService apiService = new CalculationApiService();
             ITransportService starterService = new StarterTransportService(messageBus, apiService);
 
             var result = starterService.Get(message.ThreadId);
