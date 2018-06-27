@@ -11,13 +11,9 @@ namespace Сontinuer.Controllers
         //TODO Прикрутить DI, если будет время
         private readonly IThreadingService _threadingService;
 
-        public CalcController()
+        public CalcController(IThreadingService threadingService)
         {
-            ICalculationService calculationService = new CalculationService();
-            IMessageBusService messageService = new EasyNetQService();
-            ITransportService transportService = new ContinuerTransportService(messageService);
-
-            _threadingService = new ThreadingService(calculationService, transportService);
+            _threadingService = threadingService;
         }
 
         [Route("caclulate")]

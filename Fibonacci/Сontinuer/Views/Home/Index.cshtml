@@ -3,13 +3,13 @@
 <div class="jumbotron">
     @if (Model.IsCalcStarted)
     {
-        <h1>Сontinuer</h1>
+        <h1>Continuer</h1>
         <p class="lead">Запущены процессы расчёта</p>
     }
     else
     {
         <h1>Сontinuer</h1>
-        <p class="lead">Расчёт не запущен. Запуск осуществляется через Starter.</p>
+        <p class="lead">Запуск расчётов осуществляется через приложение Starter.</p>
     }
 </div>
 
@@ -17,16 +17,6 @@
 <div class="row">
     @if (!Model.IsCalcStarted)
     {
-        <div class="col-md-4">
 
-        </div>
-
-        <div class="col-md-4">
-
-        </div>
-
-        <div class="col-md-4">
-
-        </div>
     }
 </div>

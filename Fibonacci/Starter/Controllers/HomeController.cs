@@ -2,7 +2,6 @@
 using System.Web.Mvc;
 using BLL.Dto;
 using BLL.Interfaces;
-using BLL.Services;
 using Starter.Models;
 
 namespace Starter.Controllers
@@ -12,15 +11,9 @@ namespace Starter.Controllers
         //TODO Прикрутить DI, если будет время
         private readonly IThreadingService _threadingService;
 
-        public HomeController()
+        public HomeController(IThreadingService threadingService)
         {
-            ICalculationService calculationService = new CalculationService();
-
-            IMessageBusService messageBusService = new EasyNetQService();
-            IApiService apiService = new ApiService();
-            ITransportService transportService = new StarterTransportService(messageBusService, apiService);
-
-            _threadingService = new ThreadingService(calculationService, transportService);
+            _threadingService = threadingService;
         }
 
         public ActionResult Index()
